@@ -159,7 +159,7 @@ function getSensorData(): [number[], number[]] {
 function getData(shift: number, length: number, sampleRate: number){
   if (sensorId.value != null){
     const [xs, ys] = getSensorData();
-    console.log(ys)
+    // console.log(ys)
     return [xs, ys];
   }
   return generateSine(shift, length, sampleRate);

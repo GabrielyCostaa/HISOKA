@@ -3,6 +3,7 @@
   <div class="h-screen flex flex-col">
     <div class="flex h-2/50">
       <Serial />
+      <Tools/>
     </div>
     <div
       class="h-full w-screen grid grid-flow-col grid-row-5 grid-cols-10 border-blue-600"
