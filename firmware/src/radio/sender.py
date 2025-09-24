@@ -5,10 +5,11 @@ from machine import ADC, PWM, Timer
 import time, struct
 
 PKG_SIZE = 62
+MAX_STORAGE = 100
 from machine import freq
 
 class Sender(ESPNOW_BASE):
-    def __init__(self, range=100, colect_freq=10_000, mvs_widow=4):
+    def __init__(self, range=100, colect_freq=2_000, mvs_widow=4):
         super().__init__()
         freq(240000000)
         self.receiver_mac = None
@@ -26,6 +27,7 @@ class Sender(ESPNOW_BASE):
         self.MVS_WINDOW = mvs_widow
         self.raw_data = [0]*self.MVS_WINDOW
         self.mvs_data = [ ]
+        self.storage = [ ]
         
         self.data_flag = asyncio.ThreadSafeFlag()
     
@@ -35,26 +37,23 @@ class Sender(ESPNOW_BASE):
             timer.init(mode=Timer.PERIODIC, freq=freq, callback=clbk)
     
     def read_data_clbk(self, timer):
-        mvs = self.mvs_data         # Caching to local variable, should be fast.
+        storage = self.storage
         raw_data = self.raw_data
         mvsw = self.MVS_WINDOW
-        if len(mvs) >= PKG_SIZE:
-            # data_pkg = struct.pack(f"!{len(mvs)}e", *mvs)
-            # for data in mvs:
-            # if not self.esp.send(self.receiver_mac, data_pkg):
-                # self.data_pack.append(data_pkg)
-                self.data_flag.set()
-                return
-                #print(len(mvs), len(raw_data), len(self.data_pack))
-                # print("deu ruim")
-            # self.mvs_data = []
-
-        #if len(mvs) < PKG_SIZE:
-        raw_data.append(self.pin.read_uv())
-        raw_data.pop(0)
-        mvs.append(sum(raw_data[:mvsw])/mvsw)
-        self.raw_data = raw_data
-        self.mvs_data = mvs
+        if len(self.mvs_data) >= PKG_SIZE:
+            if len(storage) < MAX_STORAGE:
+                # print("add to storage", len(storage))
+                self.storage.append(self.mvs_data.copy())
+                self.mvs_data.clear()
+                # self.storage = storage
+            self.data_flag.set()
+            # return
+        else:
+            raw_data.append(self.pin.read_uv())
+            raw_data.pop(0)
+            self.mvs_data.append(sum(raw_data[:mvsw])/mvsw)
+            self.raw_data = raw_data
+            self.storage = storage
 
 
     async def listen_for_receiver(self):
@@ -79,14 +78,13 @@ class Sender(ESPNOW_BASE):
                 await asyncio.sleep(5)
             else:
                 await self.data_flag.wait()
-                if len(self.mvs_data) >= PKG_SIZE:
-                    for i in self.mvs_data:
+                if len(self.storage)>0:
+                    dpkg = self.storage.pop()
+                    for i in dpkg:
                         send_ok = False
                         while not send_ok:
                             send_ok = await self.esp.asend(self.receiver_mac, f"{time.ticks_ms()}:{i}".encode("utf-8"))
-                    self.mvs_data = []    
                     self.data_flag.clear()
-                # self.data_pack.pop(0)
                 await asyncio.sleep(0)
 
     def get_async(self):
