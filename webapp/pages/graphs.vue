@@ -1,40 +1,34 @@
 <template>
   <!-- <Serial /> -->
-  <!--   -->
-  <!-- <div class="w-screen h-screen grid grid-flow-col grid-rows-2">
-    <div class="row-span-2">
-      <div class="bg-blue">     
-        <div class="flex flex-row">
-          <div>
-            <label class="block text-sm">Frequência (Hz)</label>
-            <input type="range" v-model="frequency" :min="1" :max="500" class="w-48" />
-            <div>{{ frequency }} Hz</div>
-          </div>
-          <div>
-            <label class="block text-sm">Amplitude</label>
-            <input type="range" v-model="amplitude" :min="0.1" :max="10" step="0.1" class="w-48" />
-            <div>{{ amplitude }}</div>
-          </div>
-          <div>
-            <label class="block text-sm">Janela (s)</label>
-            <input type="range" v-model="windowSec" :min="1" :max="5" step="0.5" class="w-48" />
-            <div>{{ windowSec }} s</div>
-          </div>
-        </div>
-      </div>  -->
   <div class="h-screen flex flex-col">
-    <div class="flex h-1/50">s</div>
+    <div class="flex h-2/50">
+      <Serial />
+      <Tools/>
+    </div>
     <div
       class="h-full w-screen grid grid-flow-col grid-row-5 grid-cols-10 border-blue-600"
     >
       <div ref="headerRef" class="border-emerald-600 col-start-1 col-end-9">
+        <div v-for="sensorId, sensor_index in sensorIds" :key="sensorId">
+          <LineChart 
+          class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
+          :sensorId="sensorId"
+          :frequency="frequency"
+          :amplitude="amplitude"
+          :windowSec="windowSec"
+          :sampleRate="sampleRate"
+          :color="getThemeColor(colors[sensor_index])"
+          :heigth="headerVH[0] / colors.length"
+          :width="headerVH[1]"
+          />
+        </div>
         <div
           class="h-fit border-pink-600 flex w-full row-span-1"
           v-for="value in colors"
         >
           <LineChart
             class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
-            :sensorIds="value"
+            :sensorIds="null"
             :frequency="frequency"
             :amplitude="amplitude"
             :windowSec="windowSec"
@@ -49,7 +43,7 @@
         <div
           class="h-1/2 bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
         >
-          <BarChart />
+          <!-- <BarChart /> -->
         </div>
         <div
           class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl h-1/2"

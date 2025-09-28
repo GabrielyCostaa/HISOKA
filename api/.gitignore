@@ -140,3 +140,4 @@ cython_debug/
 database.db
 .env.prod
 *.xml
+.vercel

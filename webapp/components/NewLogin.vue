@@ -43,7 +43,7 @@
         <div class="w-full text-center pt-3">
           <p>
             {{ $t("singup-text") }}
-            <span class="text-emerald-400">{{ $t("singup") }}!</span>
+            <a href="/register"><span class="text-emerald-400">{{ $t("singup") }}!</span></a>
           </p>
           <div class="w-full align-middle pt-2">
             <UIcon name="logos:facebook" class="text-3xl pl-10" />

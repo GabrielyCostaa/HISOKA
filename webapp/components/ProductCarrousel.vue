@@ -6,7 +6,7 @@
     :overlay="false"
   >
     <template #content>
-      <div class="flex flex-col pb-8.5">
+      <div class="flex flex-col">
         <div class="flex pl-20 pt-20">
           <div class="form text-7xl bg-[#474343] rounded-xl">
             <p class="p-2">H.I.S.O.K.A</p>

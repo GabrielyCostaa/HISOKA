@@ -1,0 +1,3 @@
+.pio/build/slave/FrameworkArduino/libb64/cencode.c.o: \
+ /home/kepler/.platformio/packages/framework-arduinoespressif32/cores/esp32/libb64/cencode.c \
+ /home/kepler/.platformio/packages/framework-arduinoespressif32/cores/esp32/libb64/cencode.h

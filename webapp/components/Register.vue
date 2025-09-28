@@ -8,7 +8,7 @@
           </div>
         </div>
         <HisokaBoard
-          class="w-9/6 -translate-x-20 -translate-y-20"
+          class="w-7/6 -translate-x-3 -translate-y-20"
         ></HisokaBoard>
       </div>
     </div>
@@ -17,7 +17,7 @@
         <p>{{ $t("singin-title") }}</p>
       </div>
       <UForm
-        :validate="validate"
+        :schema="schema"
         :state="state"
         @submit="onSubmit"
         @error="onError"
@@ -25,51 +25,52 @@
       >
         <div class="text-3xl">
           <p>{{ $t("fullname") }}</p>
-          <UFormGroup name="fullname">
+          <UFormField name="fullname">
             <UInput
               v-model="state.fullname"
               placeholder="Jhon brown"
               class="w-full"
               size="xl"
             />
-          </UFormGroup>
+          </UFormField>
         </div>
         <div class="text-3xl">
           <p>{{ $t("username") }}</p>
-          <UFormGroup name="username">
+          <UFormField name="username">
             <UInput
               v-model="state.username"
               placeholder="Jhon@13"
               class="w-full"
               size="xl"
             />
-          </UFormGroup>
+          </UFormField>
         </div>
         <div class="text-3xl">
           <p>{{ $t("email") }}</p>
-          <UFormGroup name="email">
+          <UFormField name="email">
             <UInput
               v-model="state.email"
               placeholder="Jhon@gmai.com"
               class="w-full"
               size="xl"
             />
-          </UFormGroup>
+          </UFormField>
         </div>
         <div class="text-3xl">
           <p>{{ $t("password") }}</p>
-          <UFormGroup :label="$t('password')" name="password">
+          <UFormField name="password">
             <UInput
+              v-model="state.password"
               type="password"
               placeholder="******"
               class="w-full"
               size="xl"
             />
-          </UFormGroup>
+          </UFormField>
         </div>
         <div class="text-3xl">
           <p>{{ $t("confirm_password") }}</p>
-          <UFormGroup name="confirm_password">
+          <UFormField name="confirm_password">
             <UInput
               v-model="state.confirm_password"
               type="password"
@@ -77,7 +78,7 @@
               class="w-full"
               size="xl"
             />
-          </UFormGroup>
+          </UFormField>
         </div>
         <div class="text-center">
           <UButton
@@ -88,8 +89,7 @@
           />
           <p class="p-2 text-3xl">
             {{ $t("singin-text") }}
-            <span class="text-emerald-400">{{ $t("singin") }}!</span>
-          </p>
+            <a href="/login"><span class="text-emerald-400">{{ $t("singin") }}!</span></a>          </p>
           <UIcon name="logos:facebook" class="text-3xl pl-10" />
           <UIcon name="logos:google-icon" class="text-3xl pr-10" />
         </div>
@@ -100,29 +100,68 @@
 
 <script setup lang="ts">
 import type { FormError, FormErrorEvent, FormSubmitEvent } from "#ui/types";
+const toast = useToast()
+import * as v from "valibot"
+
+const schema = v.pipe(
+  v.object({
+    fullname: v.pipe(v.string(), v.minLength(8, "Você deve preencher seu sobrenome")),
+    username: v.pipe(v.string(),v.minLength(4, "Seu nome de usuário deve ter no minimo quatro letras")),
+    email: v.pipe(v.string(), v.email('Email Inválido')),
+    password: v.pipe(v.string(), v.minLength(8, 'A senha precisa ter no mínimo oito caracteres')),
+    confirm_password: v.pipe(v.string(), v.minLength(8, 'A senha precisa ter no mínimo oito caracteres'))
+  }),
+  v.forward(
+    v.check(({ password, confirm_password}) => password == confirm_password, 'As senhas não coincidem'),
+    ["confirm_password"]
+  )
+);
+
+type Schema = v.InferOutput<typeof schema>
 
 const state = reactive({
-  fullname: undefined,
-  username: undefined,
-  email: undefined,
-  password: undefined,
-  confirm_password: undefined,
+  fullname: "",
+  username: "",
+  email: "",
+  password: "",
+  confirm_password: "",
 });
 
-const validate = (state: any): FormError[] => {
-  const errors = [];
-  if (!state.email) errors.push({ path: "email", message: "Required" });
-  if (!state.password) errors.push({ path: "password", message: "Required" });
-  return errors;
+type User = {
+  user_id: number;
+  username: string;
+  email: string;
 };
 
+const runtimeConfig = useRuntimeConfig();
+
 async function onSubmit(event: FormSubmitEvent<any>) {
-  // Do something with data
-  console.log(event.data);
+  const formData = {
+    "username":event.data.username,
+    "email":event.data.email,
+    "password":event.data.password,
+  }
+
+  $fetch<User>(runtimeConfig.public.apiBase + "/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: formData,
+  })
+    .then(async (result) => {
+      navigateTo("/login");
+    })
+    .catch(() => alert("Deu Merda"));
+
+    console.log(event.data)
 }
 
 async function onError(event: FormErrorEvent) {
   const element = document.getElementById(event.errors[0].id);
+  console.log("ERO DO BOM", element);
+  
   element?.focus();
   element?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
