@@ -80,7 +80,7 @@ function initChart(shift: number, sampleRate: number) {
     },
     scales: {
       x: { time: false },
-      y: {range:[0.7, 2.3]}//{ range: () => [0, amplitude.value] },
+      y: {range:[0.0, 3.3]}//{ range: () => [0, amplitude.value] },
     },
     series: [{}, { stroke: color.value }],
     axes: [
@@ -159,7 +159,7 @@ function getSensorData(): [number[], number[]] {
 function getData(shift: number, length: number, sampleRate: number){
   if (sensorId.value != null){
     const [xs, ys] = getSensorData();
-    console.log(ys)
+    // console.log(ys)
     return [xs, ys];
   }
   return generateSine(shift, length, sampleRate);

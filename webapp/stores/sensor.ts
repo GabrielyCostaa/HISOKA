@@ -55,6 +55,11 @@ export const useSensorStore = defineStore("sensor", () => {
   let readLoopPromise: Promise<void> | null = null;
   let pipeDone: Promise<void> | null = null;
   let decoder: TextDecoderStream | null = null;
+  const buffer_len = 3000;
+  
+  const historyBuffer = ref<Record<string, [number[],number[]]>>({});
+
+  let isRecording = ref(false);
 
   let connectionStartTime = Date.now();
 
@@ -72,7 +77,7 @@ export const useSensorStore = defineStore("sensor", () => {
     }
   }
 
-  async function connectSerial(baudRate = 9600) {
+  async function connectSerial(baudRate = 115200) {
     if (!("serial" in navigator)) {
       throw new Error("Web Serial API not supported.");
     }
@@ -91,6 +96,40 @@ export const useSensorStore = defineStore("sensor", () => {
     readLoopPromise = readLoop();
   }
 
+  function StartRecord(){
+    isRecording.value = true;
+  }
+
+  function PauseRecord(){
+    isRecording.value = false;
+  }
+
+  function SaveRecord(content, fileName, contentType) {
+      var a = document.createElement("a");
+      var file = new Blob([convertToCSVWithId(content)], {type: contentType});
+      a.href = URL.createObjectURL(file);
+      a.download = fileName;
+      a.click();
+      Object.keys(historyBuffer.value).forEach(key => {
+        historyBuffer.value[key] = [[],[]];
+      });
+  }
+
+
+function convertToCSVWithId(obj) {
+    let csv = 'id,timestamp,value\n';
+
+    for (const id in obj) {
+        const [timestamps, values] = obj[id];
+
+        for (let i = 0; i < timestamps.length; i++) {
+            csv += `${id},${timestamps[i]},${values[i]}\n`;
+        }
+    }
+
+    return csv.trim();
+}
+
   async function readLoop() {
     if (!reader) return;
 
@@ -104,11 +143,16 @@ export const useSensorStore = defineStore("sensor", () => {
           if (parsed) {
             const { id, timestamp, value: val } = parsed;
             if (!sensorData.value[id]) {
-              sensorData.value[id] = [new CircularBuffer(5000), new CircularBuffer(5000)];
+              sensorData.value[id] = [new CircularBuffer(buffer_len), new CircularBuffer(buffer_len)];
+              historyBuffer.value[id] = [[],[]];
               console.log(id);
             }
             sensorData.value[id][0].add(timestamp);
             sensorData.value[id][1].add(val);
+            if (isRecording.value){
+              historyBuffer.value[id][0].push(timestamp);
+              historyBuffer.value[id][1].push(val);
+            }
           }
         }
       }
@@ -155,13 +199,6 @@ export const useSensorStore = defineStore("sensor", () => {
     if (!sensor) return [[], []];
 
     const [timestamps, values] = sensor;
-    // if (timestamps.length === 0) return [[], []];
-
-    // const latestTimestamp = timestamps[timestamps.length - 1];
-    // const cutoff = latestTimestamp - seconds * 1000;
-
-    // const startIndex = timestamps.findIndex((ts) => ts >= cutoff);
-    // if (startIndex === -1) return [[], []];
 
     return [timestamps.getBuffer(), values.getBuffer()];
   }
@@ -169,10 +206,15 @@ export const useSensorStore = defineStore("sensor", () => {
   return {
     sensorData,
     isConnected,
+    isRecording,
+    historyBuffer,
     connectSerial,
     disconnect,
     clearSensorData,
     clearSensorDataById,
     getLastDataSlice,
+    StartRecord,
+    PauseRecord,
+    SaveRecord
   };
 });
