@@ -3,6 +3,7 @@
   <div class="h-screen flex flex-col">
     <div class="flex h-2/50">
       <Serial />
+      <Tools/>
     </div>
     <div
       class="h-full w-screen grid grid-flow-col grid-row-5 grid-cols-10 border-blue-600"
@@ -19,9 +20,12 @@
           :color="getThemeColor(colors[sensor_index])"
           :heigth="headerVH[0] / colors.length"
           :width="headerVH[1]"
+          :groupData="!sensorStore.isConnected 
+               ? groupReadings.find(g => g.sensor_id === sensorId) 
+               : undefined"
           />
         </div>
-        <div
+        <!-- <div v-if="!sensorStore.isConnected"
           class="h-fit border-pink-600 flex w-full row-span-1"
           v-for="value in colors"
         >
@@ -36,7 +40,7 @@
             :heigth="headerVH[0] / colors.length"
             :width="headerVH[1]"
           />
-        </div>
+        </div> -->
       </div>
       <div class="border-fuchsia-500 col-start-9 col-end-11" ref="wRef">
         <div
@@ -93,8 +97,27 @@ onMounted(() => {
   // window.addEventListener('resize', updateHeights)
 });
 
+const examStore = useExamStore();
 const sensorStore = useSensorStore();
-const sensorIds = computed(() => Object.keys(sensorStore.sensorData));
+const sensorIds = computed(() => {
+  // All sensor IDs: live or from the selected exam readings
+  const liveIds = Object.keys(sensorStore.sensorData);
+  if (sensorStore.isConnected) return liveIds;
+
+  // fallback: use readings from selected exam
+  if (examStore.readings.length > 0) {
+    return examStore.readings.map(r => r.sensor_id);
+  }
+
+  return liveIds; // default empty
+});
+
+const groupReadings = computed(() => {
+  if (sensorStore.isConnected) return [];
+
+  // No live connection, return the readings from the selected exam
+  return examStore.readings;
+});
 
 function getVH(el: HTMLElement) {
   return [el.clientHeight, el.clientWidth];

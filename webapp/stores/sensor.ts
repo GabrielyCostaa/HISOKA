@@ -55,6 +55,11 @@ export const useSensorStore = defineStore("sensor", () => {
   let readLoopPromise: Promise<void> | null = null;
   let pipeDone: Promise<void> | null = null;
   let decoder: TextDecoderStream | null = null;
+  const buffer_len = 500;
+  
+  const historyBuffer = ref<Record<string, [number[],number[]]>>({});
+
+  let isRecording = ref(false);
 
   let connectionStartTime = Date.now();
 
@@ -88,8 +93,59 @@ export const useSensorStore = defineStore("sensor", () => {
     isConnected.value = true;
     setConnectionStart();
     stopRequested = false;
+    sensorData.value = {};
     readLoopPromise = readLoop();
   }
+
+  function StartRecord(){
+    isRecording.value = true;
+  }
+
+  function PauseRecord(){
+    isRecording.value = false;
+  }
+
+  function clearHistoryBufferById(id:number | string){
+    // console.log("CLEAR HISTORY ID - START", id);
+    // console.log(historyBuffer.value); 
+    historyBuffer.value[id] = [[],[]];
+    // console.log(historyBuffer.value);
+    // console.log("CLEARED HISTORY ID - END", id);
+  }
+
+  function clearHistoryBuffer(){
+    for (const key in historyBuffer.value) {
+      clearHistoryBufferById(key);
+    }
+  }
+
+  function SaveRecord(content, fileName, contentType) {
+      var a = document.createElement("a");
+      var file = new Blob([convertToCSVWithId(content)], {type: contentType});
+      a.href = URL.createObjectURL(file);
+      a.download = fileName;
+      a.click();
+      clearHistoryBuffer();
+      clearSensorData();
+      // Object.keys(historyBuffer.value).forEach(key => {
+      //   historyBuffer.value[key] = [[],[]];
+      // });
+  }
+
+
+function convertToCSVWithId(obj) {
+    let csv = 'id,timestamp,value\n';
+
+    for (const id in obj) {
+        const [timestamps, values] = obj[id];
+
+        for (let i = 0; i < timestamps.length; i++) {
+            csv += `${id},${timestamps[i]},${values[i]}\n`;
+        }
+    }
+
+    return csv.trim();
+}
 
   async function readLoop() {
     if (!reader) return;
@@ -104,11 +160,16 @@ export const useSensorStore = defineStore("sensor", () => {
           if (parsed) {
             const { id, timestamp, value: val } = parsed;
             if (!sensorData.value[id]) {
-              sensorData.value[id] = [new CircularBuffer(3000), new CircularBuffer(3000)];
+              sensorData.value[id] = [new CircularBuffer(buffer_len), new CircularBuffer(buffer_len)];
+              historyBuffer.value[id] = [[],[]];
               console.log(id);
             }
             sensorData.value[id][0].add(timestamp);
             sensorData.value[id][1].add(val);
+            if (isRecording.value){
+              historyBuffer.value[id][0].push(timestamp);
+              historyBuffer.value[id][1].push(val);
+            }
           }
         }
       }
@@ -134,15 +195,15 @@ export const useSensorStore = defineStore("sensor", () => {
     }
   }
 
-  async function clearSensorData() {
+  function clearSensorData() {
     sensorData.value = {};
   }
 
-  async function clearSensorDataById(id: string | undefined) {
-    console.log("CLEAR ID", id);
+  function clearSensorDataById(id: string | undefined) {
+    // console.log("CLEAR ID", id);
     if (id) {
       if (sensorData.value[id]) {
-        delete sensorData.value[id];
+        sensorData.value[id] = [new CircularBuffer(buffer_len), new CircularBuffer(buffer_len)];
       }
     }
   }
@@ -155,24 +216,28 @@ export const useSensorStore = defineStore("sensor", () => {
     if (!sensor) return [[], []];
 
     const [timestamps, values] = sensor;
-    // if (timestamps.length === 0) return [[], []];
-
-    // const latestTimestamp = timestamps[timestamps.length - 1];
-    // const cutoff = latestTimestamp - seconds * 1000;
-
-    // const startIndex = timestamps.findIndex((ts) => ts >= cutoff);
-    // if (startIndex === -1) return [[], []];
 
     return [timestamps.getBuffer(), values.getBuffer()];
+  }
+
+  function getHistoryBuffer(): Record<string, [number[],number[]]> {
+    return historyBuffer.value;
   }
 
   return {
     sensorData,
     isConnected,
+    isRecording,
+    getHistoryBuffer,
     connectSerial,
     disconnect,
     clearSensorData,
     clearSensorDataById,
     getLastDataSlice,
+    StartRecord,
+    PauseRecord,
+    SaveRecord,
+    clearHistoryBuffer,
+    clearHistoryBufferById,
   };
 });
