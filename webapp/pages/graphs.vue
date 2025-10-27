@@ -9,36 +9,32 @@
       class="h-full w-screen grid grid-flow-col grid-row-5 grid-cols-10 border-blue-600"
     >
       <div ref="headerRef" class="border-emerald-600 col-start-1 col-end-9">
-        <div v-for="sensorId, sensor_index in sensorIds" :key="sensorId">
+        <!-- Gráficos RMS individuais -->
+        <div v-for="(sensorId, sensor_index) in sensorIds" :key="sensorId">
           <LineChart 
-          class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
-          :sensorId="sensorId"
-          :frequency="frequency"
-          :amplitude="amplitude"
-          :windowSec="windowSec"
-          :sampleRate="sampleRate"
-          :color="getThemeColor(colors[sensor_index])"
-          :heigth="headerVH[0] / colors.length"
-          :width="headerVH[1]"
-          />
-        </div>
-        <div
-          class="h-fit border-pink-600 flex w-full row-span-1"
-          v-for="value in colors"
-        >
-          <LineChart
             class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
-            :sensorIds="null"
+            :sensorId="sensorId"
             :frequency="frequency"
             :amplitude="amplitude"
             :windowSec="windowSec"
             :sampleRate="sampleRate"
-            :color="getThemeColor(value)"
+            :color="getThemeColor(colors[sensor_index])"
             :heigth="headerVH[0] / colors.length"
             :width="headerVH[1]"
           />
         </div>
+
+        <!-- Gráfico FFT único com todos os sensores -->
+        <div class="mt-4">
+          <FFTChart
+            :sensorIds="sensorIds"
+            :windowSec="windowSec"
+            :sampleRate="sampleRate"
+            :colors="colors.map(c => getThemeColor(c))"
+          />
+        </div>
       </div>
+
       <div class="border-fuchsia-500 col-start-9 col-end-11" ref="wRef">
         <div
           class="h-1/2 bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
@@ -59,10 +55,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useSensorStore } from "~/stores/sensor";
-import SensorChart from "~/components/SensorChart.vue";
+import LineChart from "~/components/SensorChart.vue";
+import FFTChart from "~/components/FFTChart.vue";
 import BarChartFake from "~/components/BarChartFake.vue";
+
 const colors = [
   "--color-first",
   "--color-second",
@@ -92,7 +90,6 @@ function updateHeights() {
 }
 onMounted(() => {
   updateHeights();
-  // window.addEventListener('resize', updateHeights)
 });
 
 const sensorStore = useSensorStore();
@@ -110,8 +107,8 @@ function getThemeColor(name: string): string {
 </script>
 
 <style scoped>
-/* .teste{
-  width: 50vw;
-  height: 50vh;
-} */
+canvas {
+  width: 100%;
+  height: 300px;
+}
 </style>
