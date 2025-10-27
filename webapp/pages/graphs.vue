@@ -62,6 +62,7 @@
 import { computed } from "vue";
 import { useSensorStore } from "~/stores/sensor";
 import SensorChart from "~/components/SensorChart.vue";
+import BarChartFake from "~/components/BarChartFake.vue";
 const colors = [
   "--color-first",
   "--color-second",

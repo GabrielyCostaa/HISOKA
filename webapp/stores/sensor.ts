@@ -201,7 +201,17 @@ function convertToCSVWithId(obj) {
     const [timestamps, values] = sensor;
 
     return [timestamps.getBuffer(), values.getBuffer()];
+
+    
   }
+  
+  function getRMS(sensorId: string): number {
+  const [_, values] = getLastDataSlice(sensorId, 2); 
+  if (values.length === 0) return 0;
+
+  const sumSquares = values.reduce((acc, v) => acc + v * v, 0);
+  return Math.sqrt(sumSquares / values.length);
+}
 
   return {
     sensorData,
@@ -215,6 +225,7 @@ function convertToCSVWithId(obj) {
     getLastDataSlice,
     StartRecord,
     PauseRecord,
-    SaveRecord
+    SaveRecord,
+    getRMS
   };
 });
