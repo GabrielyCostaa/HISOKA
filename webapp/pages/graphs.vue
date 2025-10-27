@@ -43,7 +43,7 @@
         <div
           class="h-1/2 bg-neutral-50 border-neutral-100 border-4 rounded-2xl"
         >
-          <!-- <BarChart /> -->
+           <BarChartFake />
         </div>
         <div
           class="bg-neutral-50 border-neutral-100 border-4 rounded-2xl h-1/2"
