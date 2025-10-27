@@ -24,4 +24,8 @@ const sensorStore = useSensorStore();
 
 const connect = () => sensorStore.connectSerial();
 const disconnect = () => sensorStore.disconnect();
+
+onMounted(() => {
+  sensorStore.clearHistoryBuffer();
+});
 </script>

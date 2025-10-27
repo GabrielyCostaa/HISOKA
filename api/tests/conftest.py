@@ -6,7 +6,7 @@ from testcontainers.postgres import PostgresContainer
 
 from app.database import get_session
 from app.main import app
-from app.models import User, table_registry
+from app.models import Exam, SensorReading, User, table_registry
 from app.security import get_password_hash
 
 
@@ -60,3 +60,51 @@ def token(client, user):
         data={'username': user.username, 'password': user.clean_password},
     )
     return response.json()['access_token']
+
+
+@pytest.fixture
+def exam(session, user):
+    exam = Exam(
+        comment='Test exam',
+        user_id=user.id,
+        user=user,
+    )
+    session.add(exam)
+    session.commit()
+    session.refresh(exam)
+    return exam
+
+
+@pytest.fixture
+def reading(session, exam):
+    reading = SensorReading(
+        sensor_id='sensor_1',
+        value=42.0,
+        timestamp=1625079600.0,
+        exam_id=exam.id,
+        exam=exam,
+    )
+    session.add(reading)
+    session.commit()
+    session.refresh(reading)
+    return reading
+
+
+@pytest.fixture
+def bulk_readings(session, exam):
+    readings = []
+    for i in range(5):
+        reading = SensorReading(
+            sensor_id=f'sensor_{i}',
+            value=40.0 + i,
+            timestamp=1625079600.0 + i * 60,
+            exam_id=exam.id,
+            exam=exam,
+        )
+        readings.append(reading)
+        session.add(reading)
+
+    session.commit()
+    for reading in readings:
+        session.refresh(reading)
+    return readings

@@ -15,6 +15,7 @@ import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 import { useSensorStore } from '~/stores/sensor'
 const sensorStore = useSensorStore()
+// const examStore = useExamStore()
 
 const props = defineProps<{
   sensorId: string|null;
@@ -25,6 +26,7 @@ const props = defineProps<{
   color: string;
   heigth: number;
   width: number;
+  groupData?: ReadingGroup; // new optional prop
 }>();
 
 // Parâmetros reativos para a senoide simulada
@@ -120,7 +122,7 @@ function initChart(shift: number, sampleRate: number) {
 
 function startLoop(sampleRate: number) {
   let shift = 0;
-  const loop = () => {
+    const loop = () => {
     const length = Math.floor(windowSec.value * sampleRate);
     const [xs, ys] = getData(shift, length, sampleRate);
     
@@ -134,6 +136,7 @@ function startLoop(sampleRate: number) {
 
 onMounted(() => {
   // Inicializa e inicia o loop de atualização
+  sensorStore.clearSensorDataById(sensorId.value || undefined);
   initChart(0, sampleRate.value);
   startLoop(sampleRate.value);
 
@@ -157,6 +160,12 @@ function getSensorData(): [number[], number[]] {
 }
 
 function getData(shift: number, length: number, sampleRate: number){
+  if (props.groupData) {
+    const xs = props.groupData.timestamps.slice(-length);
+    const ys = props.groupData.readings.slice(-length);
+    return [xs, ys];
+  }
+
   if (sensorId.value != null){
     const [xs, ys] = getSensorData();
     // console.log(ys)

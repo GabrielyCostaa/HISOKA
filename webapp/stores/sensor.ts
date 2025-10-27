@@ -93,6 +93,7 @@ export const useSensorStore = defineStore("sensor", () => {
     isConnected.value = true;
     setConnectionStart();
     stopRequested = false;
+    sensorData.value = {};
     readLoopPromise = readLoop();
   }
 
@@ -104,15 +105,31 @@ export const useSensorStore = defineStore("sensor", () => {
     isRecording.value = false;
   }
 
+  function clearHistoryBufferById(id:number | string){
+    // console.log("CLEAR HISTORY ID - START", id);
+    // console.log(historyBuffer.value); 
+    historyBuffer.value[id] = [[],[]];
+    // console.log(historyBuffer.value);
+    // console.log("CLEARED HISTORY ID - END", id);
+  }
+
+  function clearHistoryBuffer(){
+    for (const key in historyBuffer.value) {
+      clearHistoryBufferById(key);
+    }
+  }
+
   function SaveRecord(content, fileName, contentType) {
       var a = document.createElement("a");
       var file = new Blob([convertToCSVWithId(content)], {type: contentType});
       a.href = URL.createObjectURL(file);
       a.download = fileName;
       a.click();
-      Object.keys(historyBuffer.value).forEach(key => {
-        historyBuffer.value[key] = [[],[]];
-      });
+      clearHistoryBuffer();
+      clearSensorData();
+      // Object.keys(historyBuffer.value).forEach(key => {
+      //   historyBuffer.value[key] = [[],[]];
+      // });
   }
 
 
@@ -178,15 +195,15 @@ function convertToCSVWithId(obj) {
     }
   }
 
-  async function clearSensorData() {
+  function clearSensorData() {
     sensorData.value = {};
   }
 
-  async function clearSensorDataById(id: string | undefined) {
-    console.log("CLEAR ID", id);
+  function clearSensorDataById(id: string | undefined) {
+    // console.log("CLEAR ID", id);
     if (id) {
       if (sensorData.value[id]) {
-        delete sensorData.value[id];
+        sensorData.value[id] = [new CircularBuffer(buffer_len), new CircularBuffer(buffer_len)];
       }
     }
   }
@@ -203,11 +220,15 @@ function convertToCSVWithId(obj) {
     return [timestamps.getBuffer(), values.getBuffer()];
   }
 
+  function getHistoryBuffer(): Record<string, [number[],number[]]> {
+    return historyBuffer.value;
+  }
+
   return {
     sensorData,
     isConnected,
     isRecording,
-    historyBuffer,
+    getHistoryBuffer,
     connectSerial,
     disconnect,
     clearSensorData,
@@ -215,6 +236,8 @@ function convertToCSVWithId(obj) {
     getLastDataSlice,
     StartRecord,
     PauseRecord,
-    SaveRecord
+    SaveRecord,
+    clearHistoryBuffer,
+    clearHistoryBufferById,
   };
 });

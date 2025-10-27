@@ -96,5 +96,6 @@ def test_read_user_profile(client, user, token):
     response = client.get('/users/profile', headers={'Authorization': f'Bearer {token}'})
     assert response.json() == expected
 
+
 # def test_proposital():
 #     assert 1 == 0
