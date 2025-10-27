@@ -1,4 +1,5 @@
 <template>
+  <p>{{ sensorId }}</p>
   <div
     class="flex w-full h-full pt-3"
     ref="chartEl"
@@ -6,7 +7,8 @@
       height: heigthStyle,
       width: WidthStyle,
     }"
-  ></div>
+  >
+   </div>
 </template>
 
 <script setup lang="ts">
@@ -89,7 +91,7 @@ function initChart(shift: number, sampleRate: number) {
       {
         stroke: "#ccc",
         grid: {
-          show: true,
+          show: false,
           stroke: "rgba(255,255,255,0.5)",
           width: 1,
         },
@@ -102,7 +104,7 @@ function initChart(shift: number, sampleRate: number) {
       {
         stroke: "#ccc",
         grid: {
-          show: true,
+          show: false,
           stroke: "rgba(255,255,255,0.5)",
           width: 1,
         },

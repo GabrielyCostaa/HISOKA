@@ -25,7 +25,7 @@
                : undefined"
           />
         </div>
-        <div
+        <!-- <div v-if="!sensorStore.isConnected"
           class="h-fit border-pink-600 flex w-full row-span-1"
           v-for="value in colors"
         >
@@ -40,7 +40,7 @@
             :heigth="headerVH[0] / colors.length"
             :width="headerVH[1]"
           />
-        </div>
+        </div> -->
       </div>
       <div class="border-fuchsia-500 col-start-9 col-end-11" ref="wRef">
         <div

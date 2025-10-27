@@ -55,7 +55,7 @@ export const useSensorStore = defineStore("sensor", () => {
   let readLoopPromise: Promise<void> | null = null;
   let pipeDone: Promise<void> | null = null;
   let decoder: TextDecoderStream | null = null;
-  const buffer_len = 3000;
+  const buffer_len = 500;
   
   const historyBuffer = ref<Record<string, [number[],number[]]>>({});
 
