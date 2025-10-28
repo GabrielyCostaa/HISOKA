@@ -1,0 +1,7 @@
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+ADD . /app
+WORKDIR /app
+RUN uv sync --frozen
+EXPOSE 8000
+ENTRYPOINT [ "./entrypoint.sh" ]
+CMD ["uv", "run", "fastapi", "run"]

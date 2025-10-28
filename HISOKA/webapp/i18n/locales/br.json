@@ -1,0 +1,20 @@
+{
+  "welcome": "Bem Vindo",
+  "username": "Usuário",
+  "password": "Senha",
+  "login": "Entrar",
+  "connect": "Conectar",
+  "disconnect": "Desconectar",
+  "clear": "Limpar",
+  "logout": "Sair",
+  "hello": "Olá",
+  "no_sensor_data": "Sem dados de sensor disponívies.",
+  "singup-text": "Não tem uma conta?",
+  "singup": "Registre-se",
+  "confirm_password": "Confirmar a Senha",
+  "fullname": "Nome Completo",
+  "email": "E-mail",
+  "singin-text": "Já possuio uma conta?",
+  "singin": "Entrar",
+  "singin-title": "Porfavor preencha seus dados!"
+}

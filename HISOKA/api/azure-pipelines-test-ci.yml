@@ -1,0 +1,58 @@
+trigger:
+  branches:
+    include:
+      - develop
+      - release
+
+pr:
+ branches:
+   include:
+     - main
+     - develop
+     - release
+
+resources:
+- repo: self
+
+pool:
+  name: Self-Hosted
+
+variables:
+  tag: '$(Build.BuildId)'
+  DOCKER_BUILDKIT: 1
+
+stages:
+- stage: Test
+  displayName: Testing
+  jobs:
+  - job: test
+    steps:
+      - task: Bash@3
+        name: Install_uv
+        inputs:
+          targetType: 'inline'
+          script: 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+      - task: Bash@3
+        name: Install_deps
+        inputs:
+          targetType: 'inline'
+          script: 'uv sync --frozen'
+      - task: Bash@3
+        name: RunTests
+        inputs:
+          targetType: 'inline'
+          script: |
+            uv run task test
+        env:
+          # Mapeie explicitamente variáveis secretas aqui se necessário
+          TOKEN_ASSINATURE_KEY: $(TOKEN_ASSINATURE_KEY)
+          DATABASE_URL: $(DATABASE_URL)
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testResultsFiles: '**/test-*.xml'
+          testRunTitle: 'Publish test results for Python $(python.version)'
+      - task: PublishCodeCoverageResults@2
+        inputs:
+          summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+          pathToSources: '$(System.DefaultWorkingDirectory)/app'

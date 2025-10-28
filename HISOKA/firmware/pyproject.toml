@@ -1,0 +1,29 @@
+[project]
+name = "firmware"
+version = "0.1.0"
+description = "Firmware from HISOKA sensor"
+authors = [
+    {name = "Henrycke Bozza Schenberk", email = "0Kerryhen@pm.me"},
+]
+dependencies = [
+    "esptool>=5.1.0",
+    "mpremote>=1.25.0",
+    "pyserial>=3.5",
+    "taskipy>=1.14.1",
+]
+requires-python = ">=3.13"
+readme = "README.md"
+license = {text = "MIT"}
+
+[tool.taskipy.tasks]
+erase = 'esptool erase-flash'
+burn_c3 = 'esptool --baud 460800 write-flash 0 ./external/ESP32_GENERIC_C3-20250809-v1.26.0.bin'
+burn_s3 = 'esptool --baud 460800 write-flash 0 ./external/ESP32_GENERIC_S3-20250809-v1.26.0.bin'
+connect = 'mpremote connect'
+
+[tool.pdm]
+distribution = true
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
